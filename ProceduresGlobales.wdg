@@ -1,0 +1,173 @@
+#To edit and compare internal_properties, use WINDEV integrated tools.
+#Internal properties refer to the properties of controls in windows, reports, etc.
+info :
+ name : ProceduresGlobales
+ major_version : 28
+ minor_version : 0
+ type : 7
+ description : ""
+ subtype : 0
+procedure_set :
+ identifier : 0x12033d02000c8911
+ internal_properties : CAAAAAgAAABGLu41kG7fjQV3iS4F72qmnKaNh5694reolNKIW0iw
+ code_elements :
+  internal_properties : CAAAAAgAAABuQJNCk2ZozQ+Ix+7Qu+q7g7+UO0dFxP96dS5X6RsgfFz27WQXFZKmrgHIkTzxLNd+byGnZcZhpu+0jraA0EbS79756XPWB8Y=
+  type_code : 31
+  p_codes : []
+  procedures :
+   -
+     name : FinEchéancier
+     internal_properties : CAAAAAgAAAB0zOmlJdtm9xI94NZfjkMQx1otc1RhLQeA8L4OVRfciTpCTpb3jnaCDlw/NIinqWvUjW/qJ6krrjP2YE4SPlDqQ4dUaeJRfwPIN2cD5VeJcegTNPFtwI0a5IGcSkW2KAUX3vVX3M+7ZKZpJG+ekJ8KFQOHEvwFwOfu4wIQb4fNAEP9PZ8sierXsxCigofryj9PX3p7xtLAZhf+NOp1OOK3/R5OgpIP
+     procedure_id : 1312503917891681814
+     type_code : 15
+     code : |1-
+      // Syntaxe :
+      //FinEchéancier (<nCapital>, <nMensualités>, <nTaux>, <nNbPériode>, <sDatePremièreEchéance>)
+      //
+      // Paramètres :
+      //	nCapital : Montant du capital
+      //	nMensualités : Montant des mensualités
+      //	nTaux : Taux du prêt
+      //	nNbPériode : Nombre de périodes
+      //	sDatePremièreEchéance : Date de la première échéance
+      // Valeur de retour :
+      // 	Aucune
+      
+      Procédure FinEchéancier(nCapital, nMensualités, nTaux, nNbPériode, sDatePremièreEchéance)
+      
+      i est un entier
+      nMontantIntérêtsMensuel est un monetaire
+      nMontantIntérêtsAnnuel est un monetaire
+      nMontantIntérêtsCumulés est un monetaire
+      nMontantCapitalMensuel est un monétaire
+      nMontantCapitalAnnuel est un monétaire
+      nResteDû est un monétaire
+      dDateEchéance est une date
+      
+      externe ZR_ECHEANCIER_MENSUEL
+      
+      ZoneRépétéeSupprimeTout(ZR_ECHEANCIER_MENSUEL)
+      
+      // Première échéance
+      dDateEchéance = sDatePremièreEchéance
+      
+      // Montant total à payer
+      nResteDû = nCapital
+      
+      //Remplissage de l'échéancier
+      pour i=1 _à_ nNbPériode
+      	
+      	// Calcul des intérêts pour la période
+      	nMontantIntérêtsMensuel = FinInteretPeriode(nCapital, nTaux, i, nNbPériode)
+      	nMontantIntérêtsAnnuel += nMontantIntérêtsMensuel
+      	
+      	// Intérêts cumulés
+      	nMontantIntérêtsCumulés+=nMontantIntérêtsMensuel
+      	
+      	// Calcul du capital pour la période
+      	nMontantCapitalMensuel = nMensualités + nMontantIntérêtsMensuel
+      	nMontantCapitalAnnuel += nMensualités + nMontantIntérêtsMensuel
+      	
+      	// Reste dû
+      	nResteDû -= nMontantCapitalMensuel
+      	
+      	//Remplissage de la table mensuelle
+      	// les arrondis sont nécessaires pour l'export vers Excel
+      	ZoneRépétéeAjouteLigne(ZR_ECHEANCIER_MENSUEL, i, dateverschaine(dDateEchéance, "MMM aaaa"), arrondi(nMensualités), arrondi(-nMontantIntérêtsMensuel), arrondi(nMontantCapitalMensuel), arrondi(nResteDû), arrondi(-nMontantIntérêtsCumulés))
+      	
+      	dDateEchéance..mois++
+      FIN
+     type : 458752
+   -
+     name : FinIntérêtTotal
+     procedure_id : 1312503917891813073
+     type_code : 15
+     code : |1+
+      // Syntaxe :
+      //[ <Résultat> = ] FinIntérêtTotal (<nCapital>, <nNbPériodes>, <nTaux>)
+      //
+      // Paramètres :
+      //	nCapital : Montant du capital
+      //	nNbPériodes : Nombre de périodes
+      //	nTaux : Taux du prêt
+      // Valeur de retour :
+      // 	monétaire :    Montant total des intérêts
+      
+      Procédure FinIntérêtTotal(nCapital,nNbPériodes,nTaux)
+      
+      i est un entier
+      nMontantIntérêts est un monetaire
+      nMontantIntérêtsCumulés est un monetaire
+      dDateEchéance est une date
+      
+      //Remplissage de l'échéancier
+      pour i=1 _à_ nNbPériodes
+      	// Calcul des intérêts pour la période donnée
+      	nMontantIntérêts = FinInteretPeriode(nCapital, nTaux, i, nNbPériodes)
+      	// Intérêts cumulés
+      	nMontantIntérêtsCumulés+=nMontantIntérêts
+      	// Mois suivant
+      	dDateEchéance..mois++
+      FIN
+      
+      // Coût total du prêt
+      renvoyer nMontantIntérêtsCumulés
+     type : 458752
+   -
+     name : FinMontantEmpruntable
+     internal_properties : CAAAAAgAAAC+f6VebJgfQSkyLr7FOPV5G8Fk0ftzav0lqdSBu9Hb8h1ae5GYP7O3Mqu0tNL8TZ2HfKOTDYb8mT+zUzJhGpscZxJKOxYuCl7lcNUfo50ncnP7oWhCN4l2z7UL4rafkBY5agtMH4DZcrlr6aPTbxdhL/N/Dy8AMhkFGUX6QJbvRcmZuT4ZlCCtUmgfOs5850NeCc9nCJ7WhrNrf6VZzKQUKXH9
+     procedure_id : 1312503973726401093
+     type_code : 15
+     code : |1-
+      // Syntaxe :
+      //[ <Résultat> = ] FinMontantEmpruntable (<nMensualités>, <nTaux>, <nNbPériode>)
+      //
+      // Paramètres :
+      //	nMensualités : Montant des mensualités
+      //	nTaux : Taux du prêt
+      //	nNbPériode : Nombre de périodes
+      // Valeur de retour :
+      // 	monétaire :    montant empruntable
+      
+      Procédure FinMontantEmpruntable(nMensualités, nTaux, nNbPériode)
+      
+      // Recherche par dichotomie du montant empruntable en fonction des mensualités, du taux et de la durée de remboursement
+      nMontantEnpruntable est un monétaire
+      nMontantEnpruntableA est un monétaire
+      nMontantEnpruntableB est un monétaire
+      nCoutTotal est un monétaire
+      
+      // Valeurs de départ
+      nMontantEnpruntableA = 0
+      nMontantEnpruntableB = 1000000000
+      nMontantEnpruntable = nMontantEnpruntableB
+      
+      // Calcul du coût total du crédit pour une mensualité, un nombre d'années, un taux donné
+      nCoutTotal = nMontantEnpruntable - FinIntérêtTotal(nMontantEnpruntable, nNbPériode, nTaux)
+      tantque abs(nCoutTotal - nMensualités * nNbPériode) > 0.1
+      	
+      	nMontantEnpruntable = (nMontantEnpruntableB+nMontantEnpruntableA)/2
+      	
+      	// Coût total du crédit
+      	nCoutTotal = nMontantEnpruntable - FinIntérêtTotal(nMontantEnpruntable, nNbPériode, nTaux)
+      	
+      	si nCoutTotal < nMensualités * nNbPériode alors
+      		nMontantEnpruntableA = nMontantEnpruntable
+      	sinon
+      		nMontantEnpruntableB = nMontantEnpruntable
+      	fin
+      fIN
+      
+      // résultat :
+      renvoyer nMontantEnpruntable
+     type : 458752
+  procedure_templates : []
+  property_templates : []
+ code_parameters :
+  internal_properties : CAAAAAgAAACVGQgYbalU7DKC3oH4ItDrjtcTHXXV/EuH8q0IbhyQlw==
+resources :
+ string_res :
+  identifier : 0x114a02e9018a22a3
+  internal_properties : CAAAAAgAAACm76HWfKGWp33VjXInA4cRlqArlgTTA862QGt72W2ld5Y=
+custom_note :
+ internal_properties : CAAAAAgAAABtB9HWVzrXO2+4NDRVK0vmzaNKrCKqH1DBX30lMmGZ
